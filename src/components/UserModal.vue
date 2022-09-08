@@ -4,7 +4,7 @@
 </pre> -->
   <div class="modal-overlay">
     <div class="modal">
-      <form @submit.prevent="submitForm">
+      <form @submit.prevent="submitForm">      
         <input type="text" v-model="formData.title" />
         <br>
         <button @click="updatePost(formData)">Update Post</button>
