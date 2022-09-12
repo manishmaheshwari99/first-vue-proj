@@ -39,7 +39,6 @@
             </div>
             <div class="form-group">
               <label>Role</label>
-              <!-- <input class="form-control" type="text" v-model="formData.role" /> -->
               <select v-model="formData.role" class="form-control">
                 <option selected value="">All</option>
                 <option>Admin</option>
@@ -90,7 +89,6 @@ export default {
   updated() {
     if (this.postId !== 0) {
       this.formData = this.modalData[this.postId - 1];
-      console.log(this.postId);
     } else {
       this.formData = {
         title: "",

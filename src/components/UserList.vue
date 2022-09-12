@@ -13,17 +13,16 @@
       </div>
       <div>
         <p>Search by Text</p>
-        <input
-          @keyup="searchByText($event)"
-          class="form-control"
-          v-model="searchText"
-        />
+        <input class="form-control" v-model="searchText" />
       </div>
     </div>
 
     <button class="btn" @click="openModal">Create</button>
 
-    <table class="table table-striped" v-if="filteredPost.length > 0">
+    <table
+      class="table table-striped"
+      v-if="filteredPost.length > 0 && !loading"
+    >
       <thead>
         <th>S.No</th>
         <th @click="sortList('title')">Title</th>
@@ -32,15 +31,23 @@
         <th>Actions</th>
       </thead>
       <tbody>
-        <tr :class="{highlight: searchText.length>0}" v-for="(post, index) in filteredPost" :key="post.id">
+        <tr v-for="(post, index) in filteredPost" :key="post.id">
           <td>{{ post.id }}</td>
-          <td>{{ post.title }}</td>
-          <td>{{ post.description }}</td>
+          <template v-if="!searchText">
+            <td>{{ post.title }}</td>
+            <td>{{ post.description }}</td>
+          </template>
+          <template v-if="searchText">
+            <td v-html="searchedRow(post.title)"></td>
+            <td v-html="searchedRow(post.description)"></td>
+          </template>
           <td>{{ post.role }}</td>
           <td>
             <div class="buttons">
               <button class="btn btn-edit" @click="editPost(index)">Edit</button
-              ><button class="btn btn-danger" @click="deletePost(post.id)">Delete</button>
+              ><button class="btn btn-danger" @click="deletePost(post.id)">
+                Delete
+              </button>
             </div>
           </td>
         </tr>
@@ -97,13 +104,26 @@ export default {
     openModal() {
       this.showModal = true;
       this.currentRow = 0;
-      // console.log(this.filteredPost);
     },
 
     close() {
       this.showModal = false;
     },
-
+    searchedRow(item) {
+      const searchText = this.searchText;
+      const index = item.indexOf(searchText);
+      let string = item;
+      if (index >= 0) {
+        string = "<span class='search-text'>" + 
+        string.substring(0, index) +
+          "<span style='background-color:#04aa6d' class='search-highlight'>" +
+          string.substring(index, index + searchText.length) +
+          "</span>" +
+          string.substring(index + searchText.length) +
+          "</span>";
+      }
+      return string;
+    },
     sortList(sortBy) {
       if (this.sortedbyASC) {
         this.filteredPost.sort((x, y) =>
@@ -121,33 +141,35 @@ export default {
     filterPost() {
       if (this.selected) {
         this.filteredPost = this.posts.filter((post) => {
-          console.log(post.role === this.selected);
           return post.role === this.selected;
         });
       } else {
         this.filteredPost = this.posts;
       }
-      console.log(this.posts);
     },
-    searchByText(event) {
-      const { value } = event.target;
-      if (value == "") {
-        this.filteredPost = this.posts;
-        return;
-      }
-      this.filteredPost = this.posts.filter((post) => {
-        return (
-          (post.description.toLowerCase().search(value.toLowerCase()) !== -1 ||
-            post.title.toLowerCase().search(value.toLowerCase())) !== -1
-        );
-      });
-    },
+    // searchByText(event) {
+    //   const { value } = event.target;
+    //   if (value == "") {
+    //     this.filteredPost = this.posts;
+    //     return;
+    //   }
+    //   this.filteredPost = this.posts.filter((post) => {
+    //     return (
+    //       (post.description.toLowerCase().search(value.toLowerCase()) !== -1 ||
+    //         post.title.toLowerCase().search(value.toLowerCase())) !== -1
+    //     );
+    //   });
+    // },
     async create(data) {
+      this.loading = true;
       const resp = await axios.post(
         "https://62e26aca3891dd9ba8e7b588.mockapi.io/users/user",
         data
       );
-      this.getPosts();
+      if (resp) {
+        this.loading = false;
+        this.getPosts();
+      }
     },
     async getPosts() {
       this.loading = true;
@@ -166,16 +188,13 @@ export default {
       this.getPosts();
     },
     async updatePost(data) {
-      console.log(data);
       const resp = await axios.put(
         "https://62e26aca3891dd9ba8e7b588.mockapi.io/users/user/" + data.id,
         data
       );
       this.getPosts();
-      console.log(resp);
     },
     editPost(row) {
-      console.log(row);
       this.openModal();
       this.currentRow = Number(row + 1);
     },
@@ -247,7 +266,7 @@ table {
   cursor: pointer;
 }
 .buttons .btn {
-  margin: 0px 10px ;
+  margin: 0px 10px;
 }
 .btn-edit {
   background-color: green;
@@ -262,4 +281,5 @@ table {
 .table.table-striped .highlight {
   background-color: lightsteelblue;
 }
+
 </style>
