@@ -55,6 +55,7 @@
 </template>
 
 <script>
+import { createToast } from "mosha-vue-toastify";
 export default {
   name: "Modal",
   data() {
@@ -68,11 +69,29 @@ export default {
   },
   methods: {
     submitForm() {
-      this.close();
-      if (this.postId === 0) {
-        this.$emit("createPost", this.formData);
+      const validated = this.isFormValidate();    
+      if (validated) {
+        this.close();
+        if (this.postId === 0) {
+          this.$emit("createPost", this.formData);
+
+        } else {
+          this.$emit("updatePosts", this.formData);
+        }
       } else {
-        this.$emit("updatePosts", this.formData);
+        // show modal with error message
+        createToast({ title: "Fields are Mandatory" }, { type: "info" });
+      }
+    },
+    isFormValidate() {
+      if (
+        this.formData.title.length > 2 &&
+        this.formData.description.length > 2 &&
+        this.role != ""
+      ) {
+        return true;
+      } else {
+        return false;
       }
     },
     close() {

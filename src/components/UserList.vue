@@ -31,26 +31,15 @@
         <th>Actions</th>
       </thead>
       <tbody>
-        <tr v-for="(post, index) in filteredPost" :key="post.id">
-          <td>{{ post.id }}</td>
-          <template v-if="!searchText">
-            <td>{{ post.title }}</td>
-            <td>{{ post.description }}</td>
-          </template>
-          <template v-if="searchText">
-            <td v-html="searchedRow(post.title)"></td>
-            <td v-html="searchedRow(post.description)"></td>
-          </template>
-          <td>{{ post.role }}</td>
-          <td>
-            <div class="buttons">
-              <button class="btn btn-edit" @click="editPost(index)">Edit</button
-              ><button class="btn btn-danger" @click="deletePost(post.id)">
-                Delete
-              </button>
-            </div>
-          </td>
-        </tr>
+        <template  v-for="(post, index) in filteredPost" :key="post.id">
+          <User
+            :post="post"
+            :index="index"
+            :searchText="searchText"
+            @editPost="editPost"
+            @deletePost="deletePost"
+          />
+        </template>
       </tbody>
     </table>
 
@@ -74,8 +63,11 @@
 
 <script>
 import axios from "axios";
+import { createToast } from "mosha-vue-toastify";
+
 // import SavedModal from "./UserModal.vue";
 import Modal from "./Modal.vue";
+import User from "./User.vue";
 
 export default {
   name: "UserList",
@@ -95,7 +87,9 @@ export default {
   components: {
     // SavedModal,
     Modal,
+    User,
   },
+
   methods: {
     changeName() {
       return (this.user = "Changed Name");
@@ -109,21 +103,7 @@ export default {
     close() {
       this.showModal = false;
     },
-    searchedRow(item) {
-      const searchText = this.searchText;
-      const index = item.indexOf(searchText);
-      let string = item;
-      if (index >= 0) {
-        string = "<span class='search-text'>" + 
-        string.substring(0, index) +
-          "<span style='background-color:#04aa6d' class='search-highlight'>" +
-          string.substring(index, index + searchText.length) +
-          "</span>" +
-          string.substring(index + searchText.length) +
-          "</span>";
-      }
-      return string;
-    },
+
     sortList(sortBy) {
       if (this.sortedbyASC) {
         this.filteredPost.sort((x, y) =>
@@ -166,10 +146,9 @@ export default {
         "https://62e26aca3891dd9ba8e7b588.mockapi.io/users/user",
         data
       );
-      if (resp) {
-        this.loading = false;
-        this.getPosts();
-      }
+      createToast({ title: "User created successfully" }, { type: "success" });
+      this.loading = false;
+      this.getPosts();
     },
     async getPosts() {
       this.loading = true;
@@ -184,7 +163,11 @@ export default {
       const resp = await axios.delete(
         "https://62e26aca3891dd9ba8e7b588.mockapi.io/users/user/" + id
       );
-      alert("Deleted Successfully");
+      createToast(
+        { title: "User deleted Successfully !!" },
+        { type: "success" }
+      );
+
       this.getPosts();
     },
     async updatePost(data) {
@@ -192,9 +175,11 @@ export default {
         "https://62e26aca3891dd9ba8e7b588.mockapi.io/users/user/" + data.id,
         data
       );
+      createToast({ title: "User updated successfully" }, { type: "success" });
       this.getPosts();
     },
     editPost(row) {
+      console.log("edit", row);
       this.openModal();
       this.currentRow = Number(row + 1);
     },
@@ -205,7 +190,7 @@ export default {
 };
 </script>
 
-<style scoped>
+<style>
 .table {
   width: 100%;
   max-width: 100%;
@@ -281,5 +266,4 @@ table {
 .table.table-striped .highlight {
   background-color: lightsteelblue;
 }
-
 </style>
