@@ -78,5 +78,6 @@ export default {
 <style scoped>
 .clicked {
   opacity: 0.7;
+  pointer-events: none;
 }
 </style>
